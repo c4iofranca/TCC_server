@@ -1,14 +1,11 @@
 import { Request, Response } from "express";
-import GetLatestValuesFromDataArchive from "../dataArchive";
 
 export abstract class PiController {
   constructor() {}
 
-  static async GetLatestPiDataArchiveValues(req: Request, res: Response) {
+  static async GetHelloWorld(req: Request, res: Response) {
     try {
-      const values = await GetLatestValuesFromDataArchive();
-
-      res.json(values);
+      res.json({message: "Hello World"});
     } catch (error) {
       return res.status(500).json({ message: error });
     }
