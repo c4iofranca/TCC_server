@@ -1,6 +1,8 @@
 import { Request, Response } from "express";
+import fetch from "node-fetch";
 import { CurrentIteration, Dataset } from "../interfaces";
 import { db, tables } from "../supabase";
+
 
 interface IGetLatestValuesByTimestamp {
   tags: string[];
@@ -25,16 +27,19 @@ export abstract class DatasetController {
 
       if (data) {
         const { data: dataset } = await db
-          .rpc<Dataset>("get_row_values", { row_id: data?.id })
+          .rpc<Dataset>("get_row_values_dataset", { row_id: data?.iteration })
           .single();
 
-        const newData = { ...dataset, timestamp: new Date() };
+        const newData = { ...dataset, timestamp: new Date().toISOString() };
 
         if (dataset) {
-          await db.from(tables.dataset).insert(newData);
+          await db.from(tables.data).insert(newData);
+
+          await fetch("https://tcc-python-api.vercel.app/execute_model_y1")            
+
           await db
             .from(tables.currentIteration)
-            .update({ iteration: data.id + 1 })
+            .update({ iteration: data.iteration + 1 })
             .eq("id", 1);
         }
 
@@ -85,7 +90,7 @@ export abstract class DatasetController {
         .json({ message: "Timestamp interval should not be null." });
     }
 
-    const columns = [...body.tags, 'timestamp'].join(', ');
+    const columns = [...body.tags, "timestamp"].join(", ");
     try {
       const response: Record<string, number[][]> = {};
 

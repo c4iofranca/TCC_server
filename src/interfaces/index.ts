@@ -1,5 +1,6 @@
 interface CurrentIteration {
   id: number;
+  iteration: number;
 }
 
 interface Dataset {

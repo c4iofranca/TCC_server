@@ -14,5 +14,6 @@ export const tables = {
   dataset: 'dataset',
   executionHistory: 'execution_history',
   predictOutputs: 'predict_outputs',
-  tag: 'tag'
+  tag: 'tag',
+  data: 'data'
 }
