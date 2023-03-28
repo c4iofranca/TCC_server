@@ -1,5 +1,11 @@
 {
     "version": 2,
+    "crons": [
+      {
+        "path": "/api/execute_model_y1",
+        "schedule": "* * * * *"
+      }
+    ],
     "builds": [
       {
         "src": "src/server.ts",
