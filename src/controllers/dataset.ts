@@ -95,7 +95,7 @@ export abstract class DatasetController {
       const response: Record<string, number[][]> = {};
 
       const { data } = await db
-        .from(tables.dataset)
+        .from(tables.data)
         .select(columns)
         .order("timestamp", { ascending: false })
         .lt("timestamp", body.endDate)
