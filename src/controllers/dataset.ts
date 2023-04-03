@@ -3,7 +3,6 @@ import fetch from "node-fetch";
 import { CurrentIteration, Dataset } from "../interfaces";
 import { db, tables } from "../supabase";
 
-
 interface IGetLatestValuesByTimestamp {
   tags: string[];
 }
@@ -30,17 +29,22 @@ export abstract class DatasetController {
           .rpc<Dataset>("get_row_values_dataset", { row_id: data?.iteration })
           .single();
 
-        const newData = { ...dataset, timestamp: new Date().toISOString() };
+        const timestamp = new Date().toISOString();
+
+        const newData = { ...dataset, timestamp: timestamp };
 
         if (dataset) {
           await db.from(tables.data).insert(newData);
-
-          await fetch("https://tcc-python-api.vercel.app/execute_model_y1")            
 
           await db
             .from(tables.currentIteration)
             .update({ iteration: data.iteration + 1 })
             .eq("id", 1);
+
+          await Promise.all([
+            fetch("https://tcc-python-api.vercel.app/execute_model_y1"),
+            fetch("https://tcc-python-api.vercel.app/execute_model_y2"),
+          ]);
         }
 
         res.json(true);
