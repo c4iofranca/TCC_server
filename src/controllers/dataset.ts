@@ -118,4 +118,35 @@ export abstract class DatasetController {
       return res.status(500).json({ message: error });
     }
   }
+
+  static async GetLimits(req: Request, res: Response) {
+    try {
+      const [gauges, thermometers, manete] = await Promise.all([
+        db.from("gaugelimits").select("*").single(),
+        db.from("thermometerlimits").select("*").single(),
+        db.from("manetelimit").select("*").single()
+      ])
+
+      const response = {
+        gauges: gauges.data,
+        thermometers: thermometers.data,
+        manete: manete.data
+      }
+
+      res.json(response)
+    } catch (error) {
+      return res.status(500).json({ message: error });
+    }
+  }
+
+  static async GetValues(req: Request, res: Response) {
+    try {
+      const { data } = await db.from(tables.data).select("*").order("timestamp", { ascending: false }).limit(1).single()
+
+      res.json(data)
+
+    } catch (error) {
+      return res.status(500).json({ message: error })
+    }
+  }
 }
