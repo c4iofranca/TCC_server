@@ -68,7 +68,7 @@ export abstract class DatasetController {
     const columns = body.tags.join(", ");
     try {
       const { data, error } = await db
-        .from(tables.dataset)
+        .from(tables.data)
         .select(columns)
         .order("timestamp", { ascending: false })
         .limit(1);
