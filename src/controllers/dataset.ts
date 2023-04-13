@@ -10,6 +10,7 @@ interface IGetLatestValuesByTimestamp {
 interface IGetLatestValuesBetweenTimestamp extends IGetLatestValuesByTimestamp {
   endDate: Date | string;
   startDate: Date | string;
+  mainDate: Date | string;
 }
 
 interface IGetLatestValuesBetweenTimestampResponse {}
@@ -96,18 +97,38 @@ export abstract class DatasetController {
 
     const columns = [...body.tags, "timestamp"].join(", ");
     try {
-      const response: Record<string, number[][]> = {};
+      const response: Record<string, Record<string, number[][]>> = {
+        main: {},
+        temporal: {},
+      };
 
-      const { data } = await db
+      console.log(body.endDate, body.mainDate)
+
+      const { data: mainDate } = await db
+        .from(tables.data)
+        .select(columns)
+        .order("timestamp", { ascending: false })
+        .lt("timestamp", body.endDate)
+        .gt("timestamp", body.mainDate);
+
+      const { data: temporalData } = await db
         .from(tables.data)
         .select(columns)
         .order("timestamp", { ascending: false })
         .lt("timestamp", body.endDate)
         .gt("timestamp", body.startDate);
 
-      if (data) {
+      if (mainDate) {
         body.tags.forEach((tag) => {
-          response[tag] = data?.map((d) => {
+          response["main"][tag] = mainDate?.map((d) => {
+            return [new Date(d.timestamp).getTime(), d[tag]];
+          });
+        });
+      }
+
+      if (temporalData) {
+        body.tags.forEach((tag) => {
+          response["temporal"][tag] = temporalData?.map((d) => {
             return [new Date(d.timestamp).getTime(), d[tag]];
           });
         });
@@ -124,16 +145,16 @@ export abstract class DatasetController {
       const [gauges, thermometers, manete] = await Promise.all([
         db.from("gaugelimits").select("*").single(),
         db.from("thermometerlimits").select("*").single(),
-        db.from("manetelimit").select("*").single()
-      ])
+        db.from("manetelimit").select("*").single(),
+      ]);
 
       const response = {
         gauges: gauges.data,
         thermometers: thermometers.data,
-        manete: manete.data
-      }
+        manete: manete.data,
+      };
 
-      res.json(response)
+      res.json(response);
     } catch (error) {
       return res.status(500).json({ message: error });
     }
@@ -141,12 +162,16 @@ export abstract class DatasetController {
 
   static async GetValues(req: Request, res: Response) {
     try {
-      const { data } = await db.from(tables.data).select("*").order("timestamp", { ascending: false }).limit(1).single()
+      const { data } = await db
+        .from(tables.data)
+        .select("*")
+        .order("timestamp", { ascending: false })
+        .limit(1)
+        .single();
 
-      res.json(data)
-
+      res.json(data);
     } catch (error) {
-      return res.status(500).json({ message: error })
+      return res.status(500).json({ message: error });
     }
   }
 }
