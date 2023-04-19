@@ -2,6 +2,9 @@ import { Request, Response } from "express";
 import fetch from "node-fetch";
 import { CurrentIteration, Dataset } from "../interfaces";
 import { db, tables } from "../supabase";
+import { INTERVAL_PREDICT_MODEL_EXECUTION } from "../constants";
+import { abbreviateNumber } from "../utils/abbreviateNumber";
+import { chunkArray } from "../utils/chunkArray";
 
 interface IGetLatestValuesByTimestamp {
   tags: string[];
@@ -13,7 +16,10 @@ interface IGetLatestValuesBetweenTimestamp extends IGetLatestValuesByTimestamp {
   mainDate: Date | string;
 }
 
-interface IGetLatestValuesBetweenTimestampResponse {}
+interface ITotalFlueFlowResponse {
+  fuel_flow: number;
+  timestamp: string | Date;
+}
 
 export abstract class DatasetController {
   constructor() {}
@@ -102,7 +108,7 @@ export abstract class DatasetController {
         temporal: {},
       };
 
-      console.log(body.endDate, body.mainDate)
+      console.log(body.endDate, body.mainDate);
 
       const { data: mainDate } = await db
         .from(tables.data)
@@ -170,6 +176,36 @@ export abstract class DatasetController {
         .single();
 
       res.json(data);
+    } catch (error) {
+      return res.status(500).json({ message: error });
+    }
+  }
+
+  static async GetTotalFlueFlow(req: Request, res: Response) {
+    const startCampaign = new Date("2023-04-11 05:48:04.802").toISOString();
+    const response: Record<string, any> = {};
+
+    try {
+      const { data } = await db
+        .from(tables.data)
+        .select("fuel_flow, timestamp")
+        .order("timestamp", { ascending: true })
+        .gt("timestamp", startCampaign);
+
+      if (data) {
+        const totalFlueFlow = data.reduce(function (prev, curr) {
+          return prev + curr.fuel_flow * 60 * INTERVAL_PREDICT_MODEL_EXECUTION;
+        }, 0);
+        const { max, scale, suffix } = abbreviateNumber(totalFlueFlow);
+        const totalLoad = `${max} ${suffix}T`;
+
+        const dataChunked = chunkArray(data, data.length/12);
+
+        response["totalLoad"] = totalLoad;
+        response["data"] = dataChunked;
+      }
+
+      res.json(response)
     } catch (error) {
       return res.status(500).json({ message: error });
     }

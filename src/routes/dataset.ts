@@ -9,5 +9,6 @@ dataset.post("/api/dataset/latest/multiple", DatasetController.GetLatestValuesBe
 dataset.post("/api/dataset", DatasetController.InsertValues);
 dataset.get("/api/dataset/limits", DatasetController.GetLimits);
 dataset.get("/api/dataset/currentValues", DatasetController.GetValues)
+dataset.get("/api/dataset/total_flue_flow", DatasetController.GetTotalFlueFlow)
 
 export default dataset;
