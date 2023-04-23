@@ -1,12 +1,12 @@
-require("dotenv-safe").config();
 import { Telegraf } from "telegraf";
 import fetch from "node-fetch";
+import { TELEGRAM_BOT_TOKEN } from "../constants";
 
-const bot = new Telegraf(process.env.BOT_TOKEN || "");
+const bot = new Telegraf(TELEGRAM_BOT_TOKEN || "");
 
 export default async function notifyShipCondition(y1: number, y2: number) {
   const { result } = await fetch(
-    `https://api.telegram.org/bot${process.env.BOT_TOKEN || ""}/getUpdates`
+    `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN || ""}/getUpdates`
   )
     .then((res) => res.json())
     .then((res) => {
