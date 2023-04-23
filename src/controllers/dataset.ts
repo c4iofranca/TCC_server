@@ -62,7 +62,7 @@ export abstract class DatasetController {
               }),
           ]);
 
-          await notifyShipCondition(parseFloat(y1), parseFloat(y2))
+          // await notifyShipCondition(parseFloat(y1), parseFloat(y2))
         }
 
         res.json(true);
