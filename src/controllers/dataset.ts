@@ -5,6 +5,7 @@ import { db, tables } from "../supabase";
 import { INTERVAL_PREDICT_MODEL_EXECUTION } from "../constants";
 import { abbreviateNumber } from "../utils/abbreviateNumber";
 import { chunkArray } from "../utils/chunkArray";
+import notifyShipCondition from "../utils/setShipCondition";
 
 interface IGetLatestValuesByTimestamp {
   tags: string[];
@@ -48,10 +49,20 @@ export abstract class DatasetController {
             .update({ iteration: data.iteration + 1 })
             .eq("id", 1);
 
-          await Promise.all([
-            fetch("https://tcc-python-api.vercel.app/execute_model_y1"),
-            fetch("https://tcc-python-api.vercel.app/execute_model_y2"),
+          const [y1, y2] = await Promise.all([
+            fetch("https://tcc-python-api.vercel.app/execute_model_y1")
+              .then((res) => res.json())
+              .then((res) => {
+                return res;
+              }),
+            fetch("https://tcc-python-api.vercel.app/execute_model_y2")
+              .then((res) => res.json())
+              .then((res) => {
+                return res;
+              }),
           ]);
+
+          await notifyShipCondition(parseFloat(y1), parseFloat(y2))
         }
 
         res.json(true);
@@ -199,13 +210,13 @@ export abstract class DatasetController {
         const { max, scale, suffix } = abbreviateNumber(totalFlueFlow);
         const totalLoad = `${max} ${suffix}T`;
 
-        const dataChunked = chunkArray(data, data.length/12);
+        const dataChunked = chunkArray(data, data.length / 12);
 
         response["totalLoad"] = totalLoad;
         response["data"] = dataChunked;
       }
 
-      res.json(response)
+      res.json(response);
     } catch (error) {
       return res.status(500).json({ message: error });
     }
