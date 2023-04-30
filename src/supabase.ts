@@ -15,5 +15,7 @@ export const tables = {
   executionHistory: 'execution_history',
   predictOutputs: 'predict_outputs',
   tag: 'tag',
-  data: 'data'
+  data: 'data',
+  users: 'users',
+  alertOccurrence: 'alert_occurrence'
 }
