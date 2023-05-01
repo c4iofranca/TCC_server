@@ -79,10 +79,13 @@ export abstract class TelegramController {
           .is("endDate", null);
       }
 
-      if (sendMessage) {
-        users?.forEach(async (user) => {
-          await bot.telegram.sendMessage(user.chat_id, message);
-        });
+      if (sendMessage && users) {
+        for (let index = 0; index < users.length; index++) {
+          const user = users[index]
+
+          await bot.telegram.sendMessage(user.chat_id, message)
+          
+        }
       }
 
       res.json(true);
