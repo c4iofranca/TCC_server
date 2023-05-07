@@ -119,8 +119,6 @@ export abstract class DatasetController {
         temporal: {},
       };
 
-      console.log(body.endDate, body.mainDate);
-
       const { data: mainDate } = await db
         .from(tables.data)
         .select(columns)
@@ -199,7 +197,7 @@ export abstract class DatasetController {
     try {
       const { data } = await db
         .from(tables.data)
-        .select("fuel_flow, timestamp")
+        .select("fuel_flow, timestamp, ship_speed",)
         .order("timestamp", { ascending: true })
         .gt("timestamp", startCampaign);
 
@@ -207,13 +205,18 @@ export abstract class DatasetController {
         const totalFlueFlow = data.reduce(function (prev, curr) {
           return prev + curr.fuel_flow * 60 * INTERVAL_PREDICT_MODEL_EXECUTION;
         }, 0);
+        const totalMiles = data.reduce(function (prev, curr) {
+          return prev + curr.ship_speed * 60 * INTERVAL_PREDICT_MODEL_EXECUTION;
+        }, 0)
         const { max, scale, suffix } = abbreviateNumber(totalFlueFlow);
+        const miles = abbreviateNumber(totalMiles)
         const totalLoad = `${max} ${suffix}T`;
 
         const dataChunked = chunkArray(data, data.length / 12);
 
         response["totalLoad"] = totalLoad;
         response["data"] = dataChunked;
+        response["miles"] = `${miles.max}${miles.suffix}`;
       }
 
       res.json(response);
